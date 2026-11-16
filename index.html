@@ -591,6 +591,27 @@ body.v38 .story.min{height:auto!important}
 .side .actbtn{font-size:13px;padding:8px 10px}
 .side .range{padding:8px 11px;font-size:13px}
 @media (max-width:860px){ .side{width:auto} .side .opt .ft .sub{display:none} }
+/* ===== v40: 수업 열 간결하게 ===== */
+body.v38 #st-min{display:none}
+@media (max-width:860px){ body.v38 #st-min{display:inline} }
+.st-top{gap:10px;font-size:11.5px}
+.st-top #st-count{font-family:var(--mono);order:2}
+.st-top .dots{order:1}
+.st-top .spacer{order:3}
+.st-top #st-more,.st-top #st-min{order:4}
+.story .st-body h3{font-size:17px;margin-top:4px}
+.story .st-body>p{font-size:14px}
+.st-nav .tbtn{padding:5px 12px;font-size:13px}
+.hud .readout{gap:8px}
+.hud .readout .big{font-size:24px}
+.hud .duo .big{font-size:21px}
+.hud .readout p.now{font-size:13px}
+details.fn{margin-top:2px}
+details.fn>summary{cursor:pointer;list-style:none;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+details.fn>summary::-webkit-details-marker{display:none}
+details.fn>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details.fn[open]>summary::before{transform:rotate(45deg)}
+details.fn>.sub{margin-top:6px}
 </style>
 </head>
 <body>
@@ -5381,6 +5402,15 @@ function compactSide(){ const sb=$('#sidebody');
     sb.appendChild(d); }
 }
 renderLeft=(f=>function(){ f(); compactSide(); })(renderLeft);
+
+/* ---------- v40: 오른쪽 수업 열 간결하게. 장면 카드 머리는 점·번호·자세히만, 상황판의 긴 각주는 '계산 가정'으로 접기 ---------- */
+renderStory=(f=>function(){ f(); const n=slidesOf(S.step).length; $('#st-count').textContent=`${slideIdx+1}/${n}`; })(renderStory);
+let fnOpen=false;
+function foldNotes(root){ if(!root) return;
+  root.querySelectorAll('.readout').forEach(r=>{ const last=r.lastElementChild; if(!last||!last.classList.contains('sub')||last.textContent.trim().length<40) return;
+    const d=document.createElement('details'); d.className='fn'; if(fnOpen) d.open=true; d.innerHTML='<summary>계산 가정 · 참고</summary>'; const p=document.createElement('div'); p.className='sub'; p.innerHTML=last.innerHTML; d.appendChild(p); last.replaceWith(d); }); }
+renderLive=(f=>function(){ f(); foldNotes($('#hudlive')); })(renderLive);
+$('#hudlive').addEventListener('toggle',e=>{ if(e.target.classList&&e.target.classList.contains('fn')) fnOpen=e.target.open; },true);
 
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
