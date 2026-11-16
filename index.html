@@ -612,6 +612,27 @@ details.fn>summary::-webkit-details-marker{display:none}
 details.fn>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
 details.fn[open]>summary::before{transform:rotate(45deg)}
 details.fn>.sub{margin-top:6px}
+/* ===== v41: 위쪽 막대 간결하게 ===== */
+.topbar{background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:10px 4px 0 6px;top:calc(env(safe-area-inset-top,0px) + 4px)}
+.tb2 h1{font-size:13.5px;font-weight:600;color:var(--muted);margin-right:6px}
+.stepnav{flex:0 1 520px;gap:2px;margin-left:4px}
+.stepnav .tbtn{box-shadow:none;background:none;color:var(--muted);font-size:17px;padding:3px 10px}
+.stepnav .tbtn:hover{background:var(--fill);color:var(--ink)}
+.stepnav .tbtn.primary{background:none;color:var(--ink)}
+.stepnav .tbtn:disabled{opacity:.25}
+.stepnow{flex:0 1 auto;background:none;box-shadow:none;padding:5px 10px;gap:8px}
+.stepnow .snt{flex:0 1 auto}
+.stepnow:hover{background:var(--fill)}
+.stepnow .snp,.stepnow .snd{display:none}
+.stepnow .snt{font-size:14px}
+.stepnow::after{content:"";flex:none;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg);margin-left:2px}
+.tbtn.more{box-shadow:none;background:none;color:var(--muted)}
+.tbtn.more:hover{background:var(--fill);color:var(--ink)}
+#strip{position:fixed;z-index:6;top:env(safe-area-inset-top,0px);left:0;right:0;height:9px;margin:0;padding:0;align-items:flex-start;gap:1px}
+#strip i{height:3px}
+#strip i.cur{height:3px}
+#strip i:hover{height:5px}
+#strip i.gap{margin-left:4px}
 </style>
 </head>
 <body>
@@ -4957,7 +4978,7 @@ TCHIPS[27]=dgChips;
 STEPS.push({ part:'3부', title:'느리거나 멈출 때 진단', scene:'diag', dom:['A3','P'], badges:[A3,P3], cam:null,
   goals:['오류 없이 느린 장애를 클록·전력·PCIe·NVLink·InfiniBand 순서로 좁힐 수 있습니다','NCCL 로그와 타임아웃 메시지에서 원인 노드를 찾을 수 있습니다','Nsight Systems로 GPU가 노는 시간과 그 이유를 볼 수 있습니다'],
   key:['오류가 없으면 GPU마다 클록·전력·링크를 나란히 놓고 혼자 다른 한 장을 찾습니다. 한 장만 느려도 동기화 때문에 전체가 그 속도로 갑니다.','링크는 끊기기 전에 오류 카운터가 먼저 늘어납니다. NVLink는 nvidia-smi nvlink -e, InfiniBand는 perfquery로 봅니다.','NCCL 타임아웃은 기다린 쪽이 남깁니다. 메시지가 없는 rank와 NCCL이 고른 네트워크부터 봅니다.'],
-  body:()=>`<div class="sec prose"><h3>해 보기</h3><p>왼쪽에서 시나리오를 고르고 터미널로 원인을 찾아 고쳐 보세요. 원인을 찾으면 3D에 위치가 빨갛게 나타나고, 고치면 초록이 됩니다. 막히면 '원인 미리 보기'를 켭니다. 위쪽 '증상' 버튼은 증상별로 먼저 볼 명령을 모아 둔 곳입니다.</p></div>
+  body:()=>`<div class="sec prose"><h3>해 보기</h3><p>왼쪽에서 시나리오를 고르고 터미널로 원인을 찾아 고쳐 보세요. 원인을 찾으면 3D에 위치가 빨갛게 나타나고, 고치면 초록이 됩니다. 막히면 '원인 미리 보기'를 켭니다. 오른쪽 위 ··· 메뉴의 '증상으로 찾기'는 증상별로 먼저 볼 명령을 모아 둔 곳입니다.</p></div>
    <div class="sec"><h3>증상별로 먼저 볼 명령</h3><div class="tbl"><table class="t"><thead><tr><th>증상</th><th>먼저 볼 것</th></tr></thead><tbody>
     <tr><td>오류 없이 느리다</td><td><code>nvidia-smi --query-gpu=index,clocks.sm,power.draw,power.limit,temperature.gpu --format=csv</code>, <code>nvidia-smi -q -d PERFORMANCE</code></td></tr>
     <tr><td>CPU↔GPU 복사가 느리다</td><td><code>pcie.link.width.current</code>와 <code>max</code> 비교, <code>sudo lspci -vv</code>의 LnkSta</td></tr>
@@ -4981,7 +5002,7 @@ LEFT[27]=()=>{ const sc=DSC[S.dgSc], st=dgStage();
    <div class="grp"><span class="gl">막히면</span>${opt('checkbox','dgShow',1,'원인 미리 보기',S.dgShow,'data-k="dgShow"')}</div>
    ${partChips([['dgpu:3','GPU'],['dnvsw','NVSwitch'],['dnic:2','NIC'],['dnodeb','node02']])}`; };
 SLIDES[27]=[
-  {t:'증상에서 출발합니다',d:`실제 장애는 "느려요", "멈췄어요"처럼 증상으로 들어옵니다. 이 단계에는 원인을 숨겨 둔 시나리오가 7개 있습니다. 터미널로 원인을 찾고, 고치고, 같은 명령으로 확인해 보세요. 위쪽 '증상' 버튼을 누르면 증상별로 먼저 볼 명령과 연습할 곳이 나옵니다.`,set:{dgSc:'clock',dgShow:false},go:()=>dgReset('clock')},
+  {t:'증상에서 출발합니다',d:`실제 장애는 "느려요", "멈췄어요"처럼 증상으로 들어옵니다. 이 단계에는 원인을 숨겨 둔 시나리오가 7개 있습니다. 터미널로 원인을 찾고, 고치고, 같은 명령으로 확인해 보세요. 오른쪽 위 ··· 메뉴의 '증상으로 찾기'를 누르면 증상별로 먼저 볼 명령과 연습할 곳이 나옵니다.`,set:{dgSc:'clock',dgShow:false},go:()=>dgReset('clock')},
   {t:'오류 없이 느리면 클록부터',d:`한 장이라도 클록이 떨어지면, 동기화할 때마다 나머지 GPU가 그 한 장을 기다려 전체가 느려집니다. nvidia-smi 사용률은 100%로 보여서 놓치기 쉽습니다. --query-gpu로 클록과 전력을 나란히 보고, 이유는 -q -d PERFORMANCE에서 찾습니다. 터미널에서 찾아 고쳐 보세요.`,set:{dgSc:'clock'},go:()=>dgReset('clock')},
   {t:'PCIe 링크 폭',d:`PCIe 링크는 부팅할 때 맺어집니다. 장착이 덜 됐거나 라이저가 불량하면 x16 대신 x8로 맺어진 채 오류 없이 돕니다. 쉬는 GPU는 전력을 아끼려고 세대를 낮춰 보이니, 폭(width)을 최대값과 비교합니다.`,set:{dgSc:'pcie'},go:()=>dgReset('pcie')},
   {t:'NVLink 오류 카운터',d:`링크가 끊기면 Xid가 남지만, 오류가 조금씩 나는 링크는 데이터를 다시 보내느라 조용히 느려집니다. nvidia-smi nvlink -e의 CRC·Replay 카운터가 늘고 있는지 봅니다.`,set:{dgSc:'nvlink'},go:()=>dgReset('nvlink')},
@@ -5412,6 +5433,13 @@ function foldNotes(root){ if(!root) return;
 renderLive=(f=>function(){ f(); foldNotes($('#hudlive')); })(renderLive);
 $('#hudlive').addEventListener('toggle',e=>{ if(e.target.classList&&e.target.classList.contains('fn')) fnOpen=e.target.open; },true);
 
+/* ---------- v41: 위쪽 막대 간결하게. 카드 없이 제목·단계 이름·메뉴만, 증상은 메뉴로, 진행 막대는 화면 맨 위 가는 선 ---------- */
+{ const b=$('#btn-sym2'); b.className='mitem'; b.textContent='증상으로 찾기'; $('#mg1').prepend(b); }
+TOUR.splice(TOUR.findIndex(t=>t.t==='증상으로 찾기'),1);
+{ const m=TOUR.find(t=>t.t==='메뉴'); m.d='증상으로 찾기(장애 증상별로 먼저 볼 명령과 연습할 곳), 용어집, 비교표, 이 안내 다시 보기, 그리고 이름표·드래그 같은 보기 설정이 있습니다.'; }
+{ const s=TOUR[0]; s.d='가운데 단계 이름을 누르면 전체 단계와 진도가 나옵니다. ‹ › 로 앞뒤 단계로 가고, 화면 맨 위의 가는 막대 칸을 눌러도 그 단계로 갑니다.'; }
+document.body.appendChild($('#strip'));
+
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
 $('#btn-prev').addEventListener('click',()=>goStep(stepBy(-1)));
@@ -5482,7 +5510,8 @@ function fit(){ if(COLMODE()) return fitCol(); colClear();
   const top=Math.round($('#topbar').getBoundingClientRect().bottom), wide=innerWidth>860;
   const side=$('#side'), story=$('#story'), hud=$('#hud'), panel=$('#panel'), open=!panel.classList.contains('collapsed');
   $('#panel').style.maxHeight=wide?`calc(100vh - ${top+24}px)`:'';
-  const pr0=panel.getBoundingClientRect();
+  const prR=()=>{ const r=panel.getBoundingClientRect(); return r.height?r:{top:innerHeight-4,bottom:innerHeight,left:innerWidth,right:innerWidth,height:0,width:0}; };
+  const pr0=prR();
   if(wide){
     side.style.top=(top+12)+'px';
     $('#sidebody').style.maxHeight=`calc(100vh - ${top+70}px)`;
@@ -5501,7 +5530,7 @@ function fit(){ if(COLMODE()) return fitCol(); colClear();
   if(!renderer) return;
   const w=view.clientWidth,h=view.clientHeight;
   renderer.setSize(w,h); labelR.setSize(w,h); camera.aspect=w/h; fatMats.forEach(m=>m.resolution.set(w,h));
-  const fr=side.getBoundingClientRect(), sr=story.getBoundingClientRect(), pr=panel.getBoundingClientRect(), hr=hud.hidden?null:hud.getBoundingClientRect();
+  const fr=side.getBoundingClientRect(), sr=story.getBoundingClientRect(), pr=prR(), hr=hud.hidden?null:hud.getBoundingClientRect();
   const leftX=wide?fr.right:0, rightX=wide&&open?pr.left:w;
   const topY=wide?sr.bottom:Math.max(sr.bottom,fr.bottom), botY=Math.min(hr?hr.top:h,wide?h:pr.top);
   VIS={w:Math.max(80,rightX-leftX),h:Math.max(80,botY-topY),W:w,H:h};
