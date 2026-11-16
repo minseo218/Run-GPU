@@ -560,6 +560,19 @@ table.t thead th{font-size:11.5px}
 .coach-nav .skip{margin-right:auto;font:500 12.5px var(--sans);color:var(--muted);background:none;border:0;padding:4px 0;cursor:pointer}
 .coach-nav .skip:hover{color:var(--ink)}
 @media (prefers-reduced-motion: reduce){ .coach-hole,.coach-tip{transition:none} }
+/* ===== v38: 수업 열, 장면 카드 높이 고정 ===== */
+.story{display:flex;flex-direction:column}
+.st-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.st-nav{flex:none;margin-top:8px}
+.st-more{font-size:12px;font-weight:600}
+.st-more[aria-expanded="true"]{color:var(--muted)}
+body.v38 .panel.collapsed{display:none}
+body.v38 .panel{z-index:6}
+body.v38 .story.min{height:auto!important}
+@media (max-width:860px){
+  .story{height:min(230px,30vh)}
+  .story.min{height:auto}
+}
 </style>
 </head>
 <body>
@@ -4252,7 +4265,7 @@ let readSaved=null;
 function camNow(){ const sl=slidesOf(S.step)[slideIdx]; if(sl&&!sl.quiz&&sl.cam) moveCam(V(...sl.cam.p),V(...sl.cam.t)); else stepCam(); }
 /* 이 처리는 패널을 여닫는 원래 처리보다 먼저 돌므로, 지금 접혀 있으면 곧 열리는 것이다 */
 $('#btn-collapse').addEventListener('click',()=>{ const open=$('#panel').classList.contains('collapsed');
-  if(open&&!roomy()&&innerWidth>860){ readSaved={side:sideMin,hud:hudMin}; if(!sideMin){ sideMin=true; applySide(); } if(!hudMin&&!$('#hud').hidden){ hudMin=true; applyHud(); } $('#readnote').hidden=!(readSaved.side===false||readSaved.hud===false); }
+  if(open&&!roomy()&&innerWidth>860&&!COLMODE()){ readSaved={side:sideMin,hud:hudMin}; if(!sideMin){ sideMin=true; applySide(); } if(!hudMin&&!$('#hud').hidden){ hudMin=true; applyHud(); } $('#readnote').hidden=!(readSaved.side===false||readSaved.hud===false); }
   else if(!open&&readSaved){ sideMin=readSaved.side; applySide(); hudMin=readSaved.hud; applyHud(); readSaved=null; $('#readnote').hidden=true; }
   setTimeout(()=>{ fit(); camNow(); },0); });
 /* 자세히가 열린 채로 직접 왼쪽·아래 패널을 펼치면 그 선택을 존중한다 */
@@ -5301,6 +5314,38 @@ addEventListener('resize',()=>{ if(!$('#coach').hidden) requestAnimationFrame(to
 openHelp=function(){ tourStart(); };
 $('#btn-help').textContent='화면 안내 다시 보기';
 
+/* ---------- v38: 넓은 화면은 오른쪽 '수업 열' 하나(장면 카드 + 상황판·터미널), 자세히는 같은 열에 펼침. 장면 카드는 높이 고정 ---------- */
+function COLMODE(){ return innerWidth>860; }
+document.body.classList.add('v38');
+$('#st-min').insertAdjacentHTML('beforebegin','<button class="linkbtn st-more" id="st-more" aria-expanded="false">자세히</button>');
+$('#st-more').addEventListener('click',()=>{ $('#btn-collapse').click(); });
+const syncMore=()=>{ const open=!$('#panel').classList.contains('collapsed'); $('#st-more').setAttribute('aria-expanded',String(open)); document.body.classList.toggle('detail-open',open); };
+$('#btn-collapse').addEventListener('click',()=>setTimeout(()=>{ syncMore(); fit(); },0));
+syncMore();
+/* 넓은 화면 배치: 왼쪽 설정 | 3D | 오른쪽 수업 열 */
+let colOn=false;
+function colClear(){ if(!colOn) return; colOn=false; ['top','right','left','bottom','width','height','maxHeight'].forEach(k=>{ $('#panel').style[k]=''; }); $('#story').style.height=''; ['top','bottom','maxHeight'].forEach(k=>{ $('#hud').style[k]=''; }); }
+function fitCol(){ colOn=true;
+  const top=Math.round($('#topbar').getBoundingClientRect().bottom), side=$('#side'), story=$('#story'), hud=$('#hud'), panel=$('#panel');
+  const cw=Math.round(Math.min(440,Math.max(360,innerWidth*0.29))), cx=innerWidth-12-cw, y0=top+12, H=innerHeight-12;
+  side.style.top=y0+'px'; $('#sidebody').style.maxHeight=`calc(100vh - ${top+70}px)`;
+  const sh=Math.round(Math.max(230,Math.min(330,innerHeight*0.36)));
+  Object.assign(story.style,{top:y0+'px',left:cx+'px',width:cw+'px',right:'',height:sh+'px'});
+  const hy=Math.round(story.getBoundingClientRect().bottom)+10;
+  Object.assign(hud.style,{left:cx+'px',width:cw+'px',right:'',top:hy+'px',bottom:'auto',maxHeight:Math.max(120,H-hy)+'px'});
+  Object.assign(panel.style,{top:y0+'px',right:(innerWidth-cx-cw)+'px',left:'',bottom:'auto',width:cw+'px',maxHeight:(H-y0)+'px',height:(H-y0)+'px'});
+  if(!renderer) return;
+  const w=view.clientWidth,h=view.clientHeight;
+  renderer.setSize(w,h); labelR.setSize(w,h); camera.aspect=w/h; fatMats.forEach(m=>m.resolution.set(w,h));
+  const leftX=side.getBoundingClientRect().right, rightX=cx;
+  VIS={w:Math.max(80,rightX-leftX),h:Math.max(80,h-top),W:w,H:h};
+  camera.setViewOffset(w,h,w/2-(leftX+rightX)/2,h/2-(top+h)/2,w,h); camera.updateProjectionMatrix();
+}
+/* 둘러보기: 자세히는 접혀 있으면 장면 카드의 '자세히' 버튼을 가리킨다 */
+TOUR[5].el=()=>[COLMODE()&&$('#panel').classList.contains('collapsed')?$('#st-more'):$('#panel')];
+TOUR[5].d='단계마다 더 깊은 설명, 흔한 오해, NVIDIA 공식 문서 출처가 있습니다. 누르면 이 자리에 펼쳐지고, 접으면 장면으로 돌아옵니다.';
+TOUR[1].d='단계마다 장면 몇 개로 설명합니다. 다음을 누르거나 키보드 ← →로 넘깁니다. 밑줄 친 말을 누르면 뜻이 나옵니다. 마지막 장면의 확인 문제를 맞히면 그 단계가 완료됩니다. 아래에는 지금 장면의 숫자(상황판)와 터미널이 이어집니다.';
+
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
 $('#btn-prev').addEventListener('click',()=>goStep(stepBy(-1)));
@@ -5367,7 +5412,7 @@ document.addEventListener('click',e=>{
 });
 
 /* 장면 카드·상황판·양옆 패널을 배치하고, 남은 빈 공간 가운데에 3D가 오도록 시야를 옮긴다 */
-function fit(){
+function fit(){ if(COLMODE()) return fitCol(); colClear();
   const top=Math.round($('#topbar').getBoundingClientRect().bottom), wide=innerWidth>860;
   const side=$('#side'), story=$('#story'), hud=$('#hud'), panel=$('#panel'), open=!panel.classList.contains('collapsed');
   $('#panel').style.maxHeight=wide?`calc(100vh - ${top+24}px)`:'';
