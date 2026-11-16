@@ -374,6 +374,47 @@ table.t td.num{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--
 .dsl li{color:var(--ink);opacity:.42;transition:opacity .2s}
 .dsl li.on{opacity:1}
 .dsl li b{color:var(--ink);margin-right:2px}
+.tb2{gap:10px}
+.stepnav{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 600px;margin-left:8px}
+.stepnav .tbtn{padding:6px 13px;font-size:16px;line-height:1.1}
+.stepnow{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:var(--fill);color:var(--ink);border-radius:999px;padding:5px 14px 5px 5px;font:500 13.5px var(--sans);letter-spacing:-.01em;cursor:pointer;text-align:left}
+.stepnow:hover{filter:brightness(.97)}
+.snp{flex:none;font-size:12px;color:var(--muted);padding-left:8px}
+.snn{flex:none;min-width:22px;height:22px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:11.5px;font-weight:600;padding:0 4px;box-sizing:border-box}
+.snt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.snd{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tbtn.more{font-weight:700;letter-spacing:1px;padding:6px 12px}
+.menu{position:fixed;z-index:25;width:250px;padding:6px;display:flex;flex-direction:column;gap:6px;border-radius:16px}
+.mgrp{display:flex;flex-direction:column;background:var(--card);border-radius:12px;overflow:hidden}
+.mgl{font-size:11.5px;color:var(--muted);padding:9px 12px 3px}
+.mitem{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;text-align:left;font:400 14px var(--sans);color:var(--ink);background:none;border:0;border-radius:0;padding:10px 12px;cursor:pointer}
+.mitem+.mitem{box-shadow:inset 0 .5px 0 var(--line)}
+.mitem:hover{background:var(--fill)}
+.mrow{cursor:default}
+.mrow:hover{background:none}
+.mrow input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;margin:0;width:34px;height:20px;border-radius:999px;background:var(--fill);cursor:pointer;transition:background .2s;flex:none}
+.mrow input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.mrow input[type=checkbox]:checked{background:var(--switch)}
+.mrow input[type=checkbox]:checked::after{transform:translateX(14px)}
+.menu .seg button{font-size:12px;padding:3px 10px}
+.menu #btn-help{font-size:14px}
+.menu #btn-help::after{content:none}
+.psep{font-size:12px;font-weight:600;color:var(--muted);padding:14px 16px 6px;background:var(--bg)}
+.psep:first-child{padding-top:4px}
+.prow.cur{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.prow.cur .pt b{color:var(--accent);font-weight:600}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:'펼치기';font-size:12px;color:var(--accent)}
+details.fold[open]>summary::after{content:'접기'}
+details.fold:not([open])>summary{padding-bottom:0}
+.tag:not(.big):not(.gpu):not(.sel):not(.mmtag){font-size:11px;padding:4px 8px;color:var(--muted);background:color-mix(in srgb,var(--tagbg) 82%,transparent);box-shadow:none}
+@media (max-width:860px){
+  .tb2 h1{display:none}
+  .stepnav{flex:1;margin-left:0}
+  .snp,.snd{display:none}
+  .topbar .row.tb2{overflow:visible}
+}
 .fallback{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:860px){
@@ -404,6 +445,76 @@ table.t td.num{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--
   .topbar .row:first-child .tbtn{flex:none}
   #btn-help{font-size:0;padding:6px 11px}
   #btn-help::after{content:'?';font-size:13px}
+}
+/* ===== v34: 알약·동그라미를 줄이고 작은 모서리와 얇은 선으로 ===== */
+:root{--r1:6px;--r2:8px;--r3:10px}
+.fl{border-radius:var(--r3);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:saturate(140%) blur(16px);backdrop-filter:saturate(140%) blur(16px);box-shadow:0 0 0 1px var(--line),0 8px 28px rgba(0,0,0,.12)}
+.topbar{padding:8px 10px 0 16px;gap:0}
+h1{font-size:15px;letter-spacing:-.01em}
+.tbtn{border-radius:var(--r1);background:none;box-shadow:inset 0 0 0 1px var(--line);padding:5px 11px;font-weight:500}
+.tbtn:hover{background:var(--fill);filter:none}
+.tbtn.primary{background:var(--accent);color:#fff;box-shadow:none}
+.tbtn.primary:hover{background:var(--accent);filter:brightness(1.08)}
+.seg{border-radius:var(--r1);padding:2px}
+.seg button{border-radius:4px}
+.stepnav .tbtn{padding:5px 11px;font-size:15px}
+.stepnow{border-radius:var(--r1);background:none;box-shadow:inset 0 0 0 1px var(--line);padding:5px 12px;gap:10px}
+.stepnow:hover{background:var(--fill);filter:none}
+.snn{background:none;color:var(--accent);font:600 12.5px var(--mono);min-width:0;height:auto;padding:0;border-radius:0}
+.snp{padding-left:0;font-weight:500}
+.snp::after{content:"/";margin-left:10px;color:var(--line)}
+.strip{display:flex;align-items:flex-end;gap:2px;height:12px;margin:6px 0 0;padding-bottom:6px;cursor:pointer}
+.strip i{flex:1;height:3px;background:var(--fill);transition:height .15s}
+.strip i.gap{margin-left:7px}
+.strip i.done{background:color-mix(in srgb,var(--ok) 75%,transparent)}
+.strip i.cur{background:var(--accent);height:5px}
+.strip i:hover{height:6px}
+.dots{gap:3px}
+.dots button{width:14px;height:3px;border-radius:0}
+.dots button.on{width:14px;background:var(--accent)}
+.st-body h3{font-size:19px;font-weight:650}
+.pill .n,.hrow>b,.bring li b,.mt-h i{border-radius:4px}
+.prow .pn{width:auto;min-width:24px;height:auto;background:none;color:var(--muted);font:500 12px var(--mono);border-radius:0}
+.prow.done .pn{background:none;color:var(--ok)}
+.grp>.gl+.opt,.grp>.opt:first-child{border-top-left-radius:var(--r2);border-top-right-radius:var(--r2)}
+.grp>.opt:last-child{border-bottom-left-radius:var(--r2);border-bottom-right-radius:var(--r2)}
+.grp>.opt{box-shadow:inset 0 0 0 .5px var(--line)}
+.optrow{border-radius:var(--r1)}
+.optrow .opt{border-radius:4px}
+.range{border-radius:0 0 var(--r2) var(--r2)}
+.chip{border-radius:var(--r1);background:none;box-shadow:inset 0 0 0 1px var(--line)}
+.chip:hover{background:var(--fill)}
+.chip[aria-pressed="true"]{background:var(--accent);box-shadow:none}
+.actbtn{border-radius:var(--r1);font-size:14px;padding:9px 12px}
+.actbtn.ghost{background:none;box-shadow:inset 0 0 0 1px var(--line)}
+.legend,.readout,.info,.tbl,.mxwrap,.adv,.disc,.mini,.qopts,.plist,.gloss,.hrow,.myth li,.mt-gi,.nest div{border-radius:var(--r2)}
+.sheet{border-radius:var(--r3)}
+.sheetbody .tabs2,.tabs2 button{border-radius:var(--r1)}
+.gsearch{border-radius:var(--r1)}
+.tout{border-radius:var(--r1) var(--r1) 0 0}
+.tin{border-radius:0 0 var(--r1) var(--r1)}
+.tchips button{border-radius:4px}
+.hudtabs{background:none;padding:0;gap:16px;border-radius:0;margin-top:-2px}
+.hudtabs button{border-radius:0;padding:2px 0 3px;background:none!important;box-shadow:none!important;border-bottom:2px solid transparent}
+.hudtabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--ink)}
+.tag{border-radius:4px}
+.gpop,.menu{border-radius:var(--r2)}
+.mgrp{border-radius:var(--r1)}
+pre.cmd,.code,.cell,.mat span{border-radius:var(--r1)}
+.advb{border-radius:4px}
+.fsteps li{border-radius:4px}
+.opt input[type=checkbox],.mrow input[type=checkbox],.st-auto input{width:16px;height:16px;border-radius:4px;background:none;box-shadow:inset 0 0 0 1.5px var(--muted)}
+.opt input[type=checkbox]::after,.mrow input[type=checkbox]::after,.st-auto input::after{top:2px;left:5px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;border-radius:0;background:none;box-shadow:none;transform:rotate(45deg) scale(0);transition:transform .15s}
+.opt input[type=checkbox]:checked,.mrow input[type=checkbox]:checked,.st-auto input:checked{background:var(--accent);box-shadow:none}
+.opt input[type=checkbox]:checked::after,.mrow input[type=checkbox]:checked::after,.st-auto input:checked::after{transform:rotate(45deg) scale(1)}
+.opt.m input[type=checkbox]:checked{background:var(--mig)}
+.qopt.right::after,.qopt.wrong::after{font-size:11px}
+@media (max-width:860px){
+  .tb2 .spacer{display:none}
+  .stepnav{flex:1 1 auto}
+  .grp>.opt{border-radius:var(--r1)!important;box-shadow:inset 0 0 0 1px var(--line)!important}
+  .range{border-radius:var(--r1)}
+  .side{border-radius:var(--r3)}
 }
 </style>
 </head>
@@ -4861,6 +4972,63 @@ if(renderer){ renderer.domElement.addEventListener('pointerdown',()=>{ camTouche
 addEventListener('load',()=>setTimeout(refitFirst,60));
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>setTimeout(refitFirst,0));
 setTimeout(refitFirst,0);
+
+/* ---------- v33: 화면 정리. 위쪽 막대 한 줄(단계 선택 + 증상 + 메뉴), 보기 설정은 메뉴로, 왼쪽 범례·부품 바로 가기는 접기 ---------- */
+{
+  const tb=$('#topbar');
+  tb.insertAdjacentHTML('afterbegin',`<div class="row tb2">
+    <h1>GPU 서버 해부도</h1>
+    <div class="stepnav"><button class="tbtn" id="nprev" aria-label="이전 단계">‹</button><button class="stepnow" id="stepnow" aria-haspopup="dialog" title="단계 목록과 진도"></button><button class="tbtn primary" id="nnext" aria-label="다음 단계">›</button></div>
+    <span class="spacer"></span>
+    <button class="tbtn" id="btn-sym2">증상</button>
+    <button class="tbtn more" id="btn-more" aria-haspopup="menu" aria-expanded="false" aria-label="메뉴">···</button></div>`);
+  document.body.insertAdjacentHTML('beforeend','<div class="fl menu" id="menu" role="menu" hidden><div class="mgrp" id="mg1"></div><div class="mgrp" id="mg2"><span class="mgl">보기</span></div></div>');
+  const g1=$('#mg1'), g2=$('#mg2');
+  ['#btn-gloss','#btn-compare','#btn-help'].forEach(id=>{ const b=$(id); b.classList.remove('tbtn'); b.classList.add('mitem'); g1.appendChild(b); });
+  const ck=$('#chk-labels'), lab=ck.closest('label'); lab.className='mitem mrow'; lab.innerHTML=''; lab.append('3D 이름표',ck); g2.appendChild(lab);
+  const ak=$('#st-auto'), auto=ak.closest('label'); auto.className='mitem mrow'; auto.innerHTML=''; auto.append('장면 자동 넘김',ak); g2.appendChild(auto);
+  const dm=$('#dragmode'); const dmr=document.createElement('div'); dmr.className='mitem mrow'; dmr.append('드래그',dm); g2.appendChild(dmr);
+  const rs=$('#btn-reset'); rs.className='mitem'; rs.textContent='시점 초기화'; g2.appendChild(rs);
+  $('#btn-sym').remove();
+  [...tb.querySelectorAll(':scope>.row:not(.tb2)')].forEach(r=>r.hidden=true);
+  $('#nprev').addEventListener('click',()=>goStep(stepBy(-1)));
+  $('#nnext').addEventListener('click',()=>goStep(stepBy(1)));
+  $('#stepnow').addEventListener('click',()=>openProgress());
+  $('#btn-sym2').addEventListener('click',openSym);
+  const menu=$('#menu'), more=$('#btn-more');
+  const place=()=>{ const r=more.getBoundingClientRect(); menu.style.top=(r.bottom+8)+'px'; menu.style.right=Math.max(12,innerWidth-r.right)+'px'; };
+  const setMenu=open=>{ menu.hidden=!open; more.setAttribute('aria-expanded',String(open)); if(open) place(); };
+  more.addEventListener('click',e=>{ e.stopPropagation(); setMenu(menu.hidden); });
+  document.addEventListener('click',e=>{ if(menu.hidden) return; if(e.target.closest('#menu')&&!e.target.closest('#mg1 .mitem,#btn-reset')) return; if(!e.target.closest('#btn-more')) setMenu(false); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') setMenu(false); });
+  addEventListener('resize',()=>{ if(!menu.hidden) place(); });
+}
+/* 지금 단계 표시 (단계 버튼 28개 대신) */
+renderBar=(f=>function(){ f(); const st=STEPS[S.step], n=dno(S.step), done=ORDER.filter(i=>S.done[i]).length;
+  $('#stepnow').innerHTML=`<span class="snp">${st.part}</span><span class="snn">${n}</span><span class="snt">${st.title}</span>${st.adv?'<span class="advb">심화</span>':''}<span class="snd">${done}/${ORDER.length} ▾</span>`;
+  $('#nprev').disabled=isFirst(); $('#nnext').disabled=isLast(); })(renderBar);
+/* 진도 시트 = 단계 목록: 부 구분과 지금 단계 표시 */
+openProgress=(f=>function(){ f(); $('#sheet-title').textContent='단계와 진도'; let last=null;
+  document.querySelectorAll('#sheetbody .prow[data-go]').forEach(b=>{ const i=+b.dataset.go, p=STEPS[i].part;
+    if(p!==last){ b.insertAdjacentHTML('beforebegin',`<div class="psep">${p}</div>`); last=p; }
+    if(i===S.step){ b.classList.add('cur'); setTimeout(()=>b.scrollIntoView({block:'center'}),0); } }); })(openProgress);
+/* 왼쪽: 선 색 안내와 부품 바로 가기는 접어 둔다 (펼친 상태는 기억) */
+let lgOpen=uiGet('gpu-anatomy-lg','')==='1', pcOpen=uiGet('gpu-anatomy-pc','')==='1';
+legendHTML=(f=>function(){ const h=f(); if(!h) return ''; return h.replace('<div class="grp"><span class="gl">선 색 안내</span>',`<details class="grp fold" data-fold="lg" ${lgOpen?'open':''}><summary class="gl">선 색 안내</summary>`).replace(/<\/div><\/div>$/,'</div></details>'); })(legendHTML);
+partChips=(f=>function(list){ return f(list).replace('<div class="grp"><span class="gl">부품 바로 가기</span>',`<details class="grp fold" data-fold="pc" ${pcOpen?'open':''}><summary class="gl">부품 바로 가기</summary>`).replace(/<\/div><\/div>$/,'</div></details>'); })(partChips);
+$('#sidebody').addEventListener('toggle',e=>{ const d=e.target; if(!d.dataset||!d.dataset.fold) return; if(d.dataset.fold==='lg'){ lgOpen=d.open; uiSet('gpu-anatomy-lg',lgOpen?'1':''); } else { pcOpen=d.open; uiSet('gpu-anatomy-pc',pcOpen?'1':''); } fit(); },true);
+/* 사용법 안내도 새 배치에 맞춘다 */
+openHelp=(f=>function(first){ f(first); const rows=document.querySelectorAll('#sheetbody .hrow');
+  if(rows[0]) rows[0].querySelector('p').textContent='가운데 단계 이름을 누르면 전체 단계 목록과 진도가 나옵니다. ‹ › 로 앞뒤 단계로 갑니다. 확인 문제를 맞히면 ✓가 붙습니다.';
+  if(rows[2]) rows[2].querySelector('p').textContent='드래그로 돌리고, 휠이나 두 손가락으로 확대합니다. 오른쪽 위 ··· 메뉴에서 드래그를 이동으로 바꾸거나 이름표를 끄고, 시점을 처음으로 되돌릴 수 있습니다. 부품을 누르면 설명이 나옵니다.';
+  const h=$('#sheetbody .help'); if(h&&!h.querySelector('.hrow-sym')) h.insertAdjacentHTML('beforeend',`<div class="hrow hrow-sym"><b>7</b><div><h4>증상 · ··· 메뉴</h4><p>증상을 고르면 먼저 볼 명령과 연습할 곳으로 갑니다. ··· 메뉴에는 용어집, 비교표, 사용법, 보기 설정이 있습니다.</p></div></div>`); })(openHelp);
+
+/* v34: 위쪽 막대 아래 얇은 진행 막대. 칸 하나가 한 단계(부 사이는 띄움), 누르면 그 단계로 */
+$('#topbar').insertAdjacentHTML('beforeend','<div class="strip" id="strip" role="navigation" aria-label="단계 진행"></div>');
+renderBar=(f=>function(){ f(); let prev=null;
+  $('#strip').innerHTML=ORDER.map(i=>{ const st=STEPS[i], g=prev!==null&&st.part!==prev; prev=st.part;
+    return `<i class="${g?'gap ':''}${S.done[i]?'done ':''}${i===S.step?'cur':''}" data-strip="${i}" title="${dno(i)}단계 · ${st.title}${S.done[i]?' ✓':''}"></i>`; }).join(''); })(renderBar);
+$('#strip').addEventListener('click',e=>{ const b=e.target.closest('[data-strip]'); if(b) goStep(+b.dataset.strip); });
 
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
