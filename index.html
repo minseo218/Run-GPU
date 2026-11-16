@@ -516,6 +516,28 @@ pre.cmd,.code,.cell,.mat span{border-radius:var(--r1)}
   .range{border-radius:var(--r1)}
   .side{border-radius:var(--r3)}
 }
+/* ===== v35: 글 위계 다듬기 (자세히·상황판·장면 카드) ===== */
+.lesson h2{font-size:24px;font-weight:650;letter-spacing:-.022em}
+.lead{font-size:15px;line-height:1.6}
+.lesson .sec{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.sec h3{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
+.prose p{font-size:14.5px;line-height:1.65}
+.disc summary{font-size:13.5px}
+table.t{font-size:12.5px}
+table.t thead th{font-size:11.5px}
+.readout{gap:9px}
+.readout .big{font-size:28px;font-weight:650;letter-spacing:-.02em}
+.duo .big{font-size:23px}
+.readout .sub{font-size:12.5px;line-height:1.55}
+.readout p.now{font-size:13.5px;line-height:1.6}
+.hud .sec h3{font-size:13px;color:var(--muted);font-weight:600}
+.st-body>p{font-size:14.5px;line-height:1.65;max-width:66ch}
+.quiz p.q{font-size:15px}
+.qopt{font-size:14px;padding:11px 14px}
+.tout{height:clamp(100px,15vh,170px)}
+.cert{font-size:11.5px;letter-spacing:.01em}
+.myth .x{font-size:13.5px}
+.myth .o,.refs{font-size:13.5px}
 </style>
 </head>
 <body>
@@ -5029,6 +5051,41 @@ renderBar=(f=>function(){ f(); let prev=null;
   $('#strip').innerHTML=ORDER.map(i=>{ const st=STEPS[i], g=prev!==null&&st.part!==prev; prev=st.part;
     return `<i class="${g?'gap ':''}${S.done[i]?'done ':''}${i===S.step?'cur':''}" data-strip="${i}" title="${dno(i)}단계 · ${st.title}${S.done[i]?' ✓':''}"></i>`; }).join(''); })(renderBar);
 $('#strip').addEventListener('click',e=>{ const b=e.target.closest('[data-strip]'); if(b) goStep(+b.dataset.strip); });
+
+/* ---------- v35: 3D 다듬기. 색은 채도를 낮춰 한 톤으로, 상자마다 얇은 윤곽선, 장면에 맞춘 그림자 범위, 옅은 격자 바닥 ---------- */
+const isDarkUI=()=>{ const t=document.documentElement.dataset.theme; return t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches); };
+/* 색: 팔레트(PAL)에 없는 원색은 채도를 낮추고 명도를 고르게 */
+mat=(f=>function(color,metal,rough){ if(typeof color==='number'&&!PAL[color]){ const c=new THREE.Color(color), h={}; c.getHSL(h); c.setHSL(h.h,h.s*0.8,Math.min(0.82,h.l*0.97+0.01)); color=c.getHex(); } const m=f(color,metal,rough); m.envMapIntensity=0.16+m.metalness*0.6; return m; })(mat);
+/* 윤곽선: 기술 도면처럼 모서리에 얇은 선 */
+const EDGE={dark:new THREE.LineBasicMaterial({color:0x000000,transparent:true,opacity:.42,depthWrite:false}),light:new THREE.LineBasicMaterial({color:0x0b0d10,transparent:true,opacity:.22,depthWrite:false})};
+const edgeGeo=new Map();
+box=(f=>function(w,h,d,color,x,y,z,key,o={}){ const m=f(w,h,d,color,x,y,z,key,o);
+  if(o.edge!==false&&!o.mat&&Math.min(w,h,d)>=0.15&&Math.max(w,h,d)>=0.9){ const k=`${w.toFixed(2)}|${h.toFixed(2)}|${d.toFixed(2)}`; let g=edgeGeo.get(k); if(!g){ g=new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)); edgeGeo.set(k,g); }
+    const l=new THREE.LineSegments(g,isDarkUI()?EDGE.dark:EDGE.light); l.raycast=()=>{}; l.userData.edge=true; l.renderOrder=2; m.add(l); }
+  return m; })(box);
+/* 바닥: 장면 아래 옅은 격자가 가장자리로 갈수록 사라진다 */
+const floorTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=1024; const g=c.getContext('2d');
+  g.strokeStyle='rgba(255,255,255,1)'; g.lineWidth=1.2; for(let i=0;i<=32;i++){ const p=i*32; g.beginPath(); g.moveTo(p,0); g.lineTo(p,1024); g.moveTo(0,p); g.lineTo(1024,p); g.stroke(); }
+  g.globalCompositeOperation='destination-in'; const r=g.createRadialGradient(512,512,40,512,512,512); r.addColorStop(0,'rgba(0,0,0,1)'); r.addColorStop(.55,'rgba(0,0,0,.6)'); r.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=r; g.fillRect(0,0,1024,1024);
+  const t=new THREE.CanvasTexture(c); if(renderer) t.anisotropy=renderer.capabilities.getMaxAnisotropy(); return t; })();
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:floorTex,transparent:true,depthWrite:false,toneMapped:false}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-0.33; floor.renderOrder=-1; scene.add(floor);
+function themeStage(){ const dark=isDarkUI(); floor.material.color.setHex(dark?0xffffff:0x0b0d10); floor.material.opacity=dark?.07:.08;
+  if(world) world.traverse(o=>{ if(o.userData&&o.userData.edge) o.material=dark?EDGE.dark:EDGE.light; }); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeStage);
+new MutationObserver(themeStage).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+/* 그림자·바닥을 지금 장면 크기에 맞춘다 */
+scene.add(sun.target);
+let stageWorld=null;
+function fitStage(){ if(!world||world===stageWorld) return; stageWorld=world;
+  const b=new THREE.Box3(); world.traverse(o=>{ if(o.isMesh&&o.geometry&&!(o.material&&o.material.transparent&&o.material.opacity<0.3)) b.expandByObject(o); }); if(b.isEmpty()) return;
+  const c=b.getCenter(V(0,0,0)), s=b.getSize(V(0,0,0)), r=Math.max(s.x,s.z,s.y)*0.62+3;
+  sun.target.position.set(c.x,0,c.z); sun.position.set(c.x+9,20+s.y,c.z+12); sun.target.updateMatrixWorld();
+  Object.assign(sun.shadow.camera,{left:-r,right:r,top:r,bottom:-r,near:1,far:60+s.y*2}); sun.shadow.camera.updateProjectionMatrix();
+  const fs=Math.max(s.x,s.z)*2.2+18; floor.position.set(c.x,-0.33,c.z); floor.scale.set(fs,fs,1); floorTex.repeat.set(1,1);
+  themeStage(); }
+ensureScene=(f=>function(force){ const r=f(force); fitStage(); return r; })(ensureScene);
+const applyPart2V35=applyPart2; applyPart2=function(){ applyPart2V35(); fitStage(); };
 
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
