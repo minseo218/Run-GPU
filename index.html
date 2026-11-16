@@ -573,6 +573,24 @@ body.v38 .story.min{height:auto!important}
   .story{height:min(230px,30vh)}
   .story.min{height:auto}
 }
+/* ===== v39: 왼쪽 패널 간결하게 ===== */
+.side{width:236px}
+.side .phead{padding:12px 14px 2px}
+.sidebody{gap:12px;padding:6px 10px 12px}
+.side .grp>.gl{font-size:11.5px;padding:0 4px 5px}
+.side .opt{padding:8px 11px;font-size:13px;gap:8px}
+.side .opt .ft{flex-direction:row;align-items:baseline;gap:7px;min-width:0;white-space:nowrap;line-height:1.35}
+.side .opt .ft>b{flex:none;font-weight:500}
+.side .opt .ft .sub{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;color:var(--muted)}
+.side .opt i{display:none}
+.side .optrow .opt{padding:5px 2px}
+.side .optrow .opt .ft{justify-content:center}
+.side .optrow .opt .ft .sub{display:none}
+.side .chips{gap:5px;margin-top:6px}
+.side .chip{font-size:12px;padding:4px 9px}
+.side .actbtn{font-size:13px;padding:8px 10px}
+.side .range{padding:8px 11px;font-size:13px}
+@media (max-width:860px){ .side{width:auto} .side .opt .ft .sub{display:none} }
 </style>
 </head>
 <body>
@@ -5345,6 +5363,24 @@ function fitCol(){ colOn=true;
 TOUR[5].el=()=>[COLMODE()&&$('#panel').classList.contains('collapsed')?$('#st-more'):$('#panel')];
 TOUR[5].d='단계마다 더 깊은 설명, 흔한 오해, NVIDIA 공식 문서 출처가 있습니다. 누르면 이 자리에 펼쳐지고, 접으면 장면으로 돌아옵니다.';
 TOUR[1].d='단계마다 장면 몇 개로 설명합니다. 다음을 누르거나 키보드 ← →로 넘깁니다. 밑줄 친 말을 누르면 뜻이 나옵니다. 마지막 장면의 확인 문제를 맞히면 그 단계가 완료됩니다. 아래에는 지금 장면의 숫자(상황판)와 터미널이 이어집니다.';
+
+/* ---------- v39: 왼쪽 패널 간결하게. 항목은 한 줄(이름 + 옅은 설명), 범례와 부품 바로 가기는 한 칸으로 접기 ---------- */
+$('#side .phead span').textContent='설정';
+function compactSide(){ const sb=$('#sidebody');
+  sb.querySelectorAll('.opt .ft').forEach(ft=>{ const b=ft.querySelector(':scope>b'); if(!b) return; const lab=ft.closest('label'); const subs=[];
+    [...ft.childNodes].forEach(n=>{ if(n===b) return;
+      if(n.nodeType===3){ const t=n.textContent.trim(); if(t){ const s=document.createElement('span'); s.className='sub'; s.textContent=t; ft.replaceChild(s,n); subs.push(t); } else ft.removeChild(n); }
+      else if(n.tagName==='SMALL'){ n.classList.add('sub'); subs.push(n.textContent); }
+      else if(n.tagName==='BR') ft.removeChild(n); });
+    if(lab&&subs.length) lab.title=b.textContent+' · '+subs.join(' · '); });
+  const lg=sb.querySelector('details[data-fold="lg"]'), pc=sb.querySelector('details[data-fold="pc"]');
+  if(lg||pc){ const d=document.createElement('details'); d.className='grp fold'; d.dataset.fold='lg'; if(lgOpen) d.open=true;
+    d.innerHTML='<summary class="gl">'+(pc&&lg?'부품 바로 가기 · 선 색 안내':pc?'부품 바로 가기':'선 색 안내')+'</summary>';
+    if(pc){ const c=pc.querySelector('.chips'); if(c) d.appendChild(c); pc.remove(); }
+    if(lg){ const l=lg.querySelector('.legend'); if(l){ l.style.marginTop='8px'; d.appendChild(l); } lg.remove(); }
+    sb.appendChild(d); }
+}
+renderLeft=(f=>function(){ f(); compactSide(); })(renderLeft);
 
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
