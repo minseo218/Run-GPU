@@ -538,6 +538,12 @@ table.t thead th{font-size:11.5px}
 .cert{font-size:11.5px;letter-spacing:.01em}
 .myth .x{font-size:13.5px}
 .myth .o,.refs{font-size:13.5px}
+.tnbar{display:flex;height:10px;border-radius:3px;overflow:hidden;gap:1px;background:var(--fill)}
+.tnbar i{display:block;height:100%}
+.tnleg{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.tnleg li{display:flex;align-items:center;gap:6px}
+.tnleg i{width:10px;height:10px;border-radius:2px;display:block}
+.tnleg b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1517,7 +1523,7 @@ const DOMAINS=[['A1','Associate · AI 기초 (38%)'],['A2','Associate · AI 인�
 
 /* ================= 장면 선택 ================= */
 let curScene=null, lastRoute=null;
-const sceneOf=st=>({compute:'compute',server:S.form==='overview'?'overview':S.form==='sxm'?'sxm':'server',card:'card',topo:S.mode==='sxm'?'sxm':'card',p2p:'card-nobridge',mig:'mig',net:'net',dpu:'dpu-'+S.nicType,diag:'diag',cluster:'cluster',facility:'facility',collective:'collective',stack:'stack',sched:'sched',k8s:'k8s-'+S.k8sShare,monitor:'monitor',bringup:'bringup',trouble:'trouble',final:'cluster',chip:'chip',mem:'mem',exec:'exec',dtype:'dtype',storage:'storage',serve:'serve',design:'design'})[STEPS[st].scene];
+const sceneOf=st=>({compute:'compute',server:S.form==='overview'?'overview':S.form==='sxm'?'sxm':'server',card:'card',topo:S.mode==='sxm'?'sxm':'card',p2p:'card-nobridge',mig:'mig',net:'net',dpu:'dpu-'+S.nicType,diag:'diag',cluster:'cluster',facility:'facility',collective:'collective',stack:'stack',sched:'sched',k8s:'k8s-'+S.k8sShare,monitor:'monitor',bringup:'bringup',trouble:'trouble',final:'cluster',chip:'chip',mem:'mem',exec:'exec',tune:'tune',fail:'fail',dtype:'dtype',storage:'storage',serve:'serve',design:'design'})[STEPS[st].scene];
 const SCENE_CAM={overview:{p:[0,15,21],t:[0,0.8,0]},compute:{p:[0,26,23],t:[0,0,0.2]},server:{p:[17,22,26],t:[0,1,0]},card:{p:[16,24,29],t:[-0.5,0.6,0.6]},'card-nobridge':{p:[16,24,29],t:[-0.5,0.6,0.6]},sxm:{p:[3,30,30],t:[0,0,1.8]},mig:{p:[0,16,14],t:[0,0,0]}};
 function ensureScene(force){
   const k=sceneOf(S.step);
@@ -1548,6 +1554,8 @@ function ensureScene(force){
   else if(k==='serve') buildServe();
   else if(k==='design') buildDesign();
   else if(k==='diag') buildDiag();
+  else if(k==='tune') buildTune();
+  else if(k==='fail') buildFail();
   if(k==='card') applyBridge(TOPO(S.step)?S.bridge:true);
   applyExplode();
   return true;
@@ -2382,7 +2390,7 @@ SLIDES.push(
  [ {t:'서버를 쌓으면 전력이 쌓인다',d:`DGX H100 한 대가 최대 약 10.2 kW를 씁니다. 높이가 8U라서 42U 랙에는 많아야 5대까지 들어갑니다. 두 대만 넣어도 20 kW라서 일반 서버 랙 여러 개 몫입니다. 왼쪽에서 대수를 늘려 보세요.`,set:{rackN:2,srvType:'h100',cool:'air'}},
    {t:'전기는 모두 열이 된다',d:`랙 앞의 찬 공기 통로로 들어온 공기가 서버를 식히고, 뒤의 더운 공기 통로로 나갑니다. 두 통로의 공기가 섞이지 않게 막는 것이 공랭의 기본입니다.`,set:{rackN:3,cool:'air'}},
    {t:'공랭의 한계',d:`네 대를 넣으면 약 41 kW가 됩니다. NVIDIA의 공랭 데이터센터 설계도 랙당 DGX H100 4대를 기준으로 잡습니다. 그보다 많이 넣으면 공기로는 열을 다 빼지 못해 서버가 뜨거워지고 스스로 속도를 낮춥니다. 랙을 나누거나 수랭으로 바꿔야 합니다.`,set:{rackN:4,srvType:'h100',cool:'air'}},
-   {t:'수랭: 물로 열을 가져간다',d:`칩에 붙인 냉각판으로 냉각수가 지나가며 열을 가져갑니다. ${gl('[[CDU]]')}는 그 물을 식혀 다시 보냅니다. 물은 공기보다 훨씬 많은 열을 옮깁니다. 그래서 GB200 NVL72처럼 랙 하나가 약 120 kW인 구성도 가능합니다.`,set:{rackN:5,srvType:'h100',cool:'liquid'}},
+   {t:'수랭: 물로 열을 가져간다',d:`칩에 붙인 냉각판으로 냉각수가 지나가며 열을 가져갑니다. ${gl('[[CDU]]')}는 그 물을 식혀 다시 보냅니다. 물은 공기보다 훨씬 많은 열을 옮깁니다. 그래서 GB200 NVL72처럼 랙 하나에 120 kW급 냉각이 필요한 구성도 가능합니다.`,set:{rackN:5,srvType:'h100',cool:'liquid'}},
    {t:'전원 이중화와 공간',d:`랙 안의 ${gl('[[PDU]]')}를 A·B 두 줄로 두고, 서로 다른 전원(${gl('[[UPS]]')}, 다른 공급선)에 연결합니다. 그러면 한쪽이 끊겨도 버팁니다. GPU 랙은 무거워서 바닥 하중도 함께 따져야 합니다.`,set:{rackN:4,cool:'air'},view:'power',cam:{p:[-10,9,-14],t:[0,3.5,-1]}},
    {t:'직접 지을까, 빌려 쓸까',d:`이런 전력·냉각 공사까지 직접 하는 것이 온프렘입니다. 오래 꽉 채워 쓸수록 유리합니다. 클라우드는 바로 시작할 수 있고 쓰는 만큼만 냅니다.`,set:{rackN:4,cool:'air'},extra:()=>`<button class="linkbtn" data-compare="cloud">온프렘과 클라우드 비교표 ›</button>`} ],
  [ {t:'GPU끼리 왜 대화하나',d:`2부는 학습을 GPU 여러 장, 서버 여러 대로 나누는 이야기입니다. 먼저 왜 GPU끼리 데이터를 많이 주고받는지 봅니다. ${gl('[[데이터 병렬]]')}에서는 GPU마다 다른 데이터로 ${gl('[[기울기]]')}를 계산합니다. 그대로 가중치를 고치면 GPU마다 모델이 달라집니다. 그래서 기울기를 모두 합쳐서 똑같이 나눠 가져야 합니다. GPU 바깥의 색 막대가 기울기 8조각입니다.`,set:{par:'data'},go:()=>c2set(0)},
@@ -5087,6 +5095,151 @@ function fitStage(){ if(!world||world===stageWorld) return; stageWorld=world;
 ensureScene=(f=>function(force){ const r=f(force); fitStage(); return r; })(ensureScene);
 const applyPart2V35=applyPart2; applyPart2=function(){ applyPart2V35(); fitStage(); };
 
+/* ---------- v36: 28 성능 튜닝(스텝 시간 쪼개 보기), 29 대규모 학습의 장애와 복구, 4단계 NVL72 장면 ---------- */
+Object.assign(S,{tnLoader:false,tnNuma:false,tnBf16:false,tnOverlap:false,tnGraph:false,flN:16384,flC:5,flR:30,flT:'opt'});
+Object.assign(SCENE_CAM,{tune:{p:[0,15,17],t:[0,0,0.4]},fail:{p:[0,15,18],t:[0,0,0.6]}});
+/* ===== 28: 스텝 시간 (예시 값) ===== */
+const TN_PARTS=[['data','데이터 기다림',0xb0896a],['launch','실행 준비 (CPU)',0xc8a45a],['compute','계산 (순전파·역전파)',0x3f86c9],['comm','드러난 통신',0x2f9e8c]];
+function tn(){ const d=S.tnLoader?(S.tnNuma?25:40):(S.tnNuma?170:220), l=S.tnGraph?12:(S.tnNuma?52:60), c=S.tnBf16?190:420, m=S.tnOverlap?35:160;
+  const v={data:d,launch:l,compute:c,comm:m}, total=d+l+c+m; return {v,total,base:860,thr:256/(total/1000),speed:860/total}; }
+function buildTune(){
+  reset(); const r=tn(), W=22, k=W/860, x0=-W/2;
+  box(W+4,0.2,10.4,0x1c1f23,0,-0.32,0.4,'',{metal:.4,rough:.6});
+  for(let g=0;g<8;g++){ const z=-3.5+g; let x=x0;
+    TN_PARTS.forEach(([key,,col])=>{ const w=r.v[key]*k; if(w<0.02) return; box(w,0.42,0.62,col,x+w/2,0.21,z,'tn'+key,{metal:.25,rough:.5,shadow:g===0}); x+=w; });
+    label('GPU '+g,x0-1.3,0.3,z,'','tncompute'); }
+  for(let t=0;t<=800;t+=200){ const x=x0+t*k; box(0.04,0.04,8.6,0x8d9196,x,0.02,0.1,'',{shadow:false,edge:false}); label(t+'ms',x,0.1,4.9,'','tncompute'); }
+  label(`한 스텝 ${Math.round(r.total)}ms${r.total<r.base?` · 처음보다 ${r.speed.toFixed(1)}배 빠름`:''}`,x0+r.total*k/2,1.4,-4.4,'big','tncompute');
+  newSig=sigNow();
+}
+function tnLive(){ const r=tn(), bar=TN_PARTS.map(([key,n,col])=>`<i title="${n} ${r.v[key]}ms" style="width:${r.v[key]/r.base*100}%;background:#${col.toString(16).padStart(6,'0')}"></i>`).join('');
+  return `<div class="readout"><div class="sub">한 스텝을 쪼갠 시간 (예시 값) · GPU 8장 데이터 병렬 · 배치 256</div>
+   <div class="duo"><div><div class="big">${Math.round(r.total)}ms</div><div class="sub">한 스텝 (처음 860ms)</div></div><div><div class="big">${Math.round(r.thr)}</div><div class="sub">샘플/초 · ${r.speed.toFixed(1)}배</div></div></div>
+   <div class="tnbar">${bar}</div>
+   <ul class="tnleg">${TN_PARTS.map(([key,n,col])=>`<li><i style="background:#${col.toString(16).padStart(6,'0')}"></i>${n} <b>${r.v[key]}ms</b></li>`).join('')}</ul>
+   <div class="sub">숫자는 이해를 돕기 위한 예시입니다. 실제 비율은 모델과 데이터마다 달라서 Nsight Systems나 PyTorch 프로파일러로 잽니다.</div></div>`; }
+/* ===== 29: 장애와 복구 ===== */
+const FL_RATE=419/54/16384; /* Llama 3 405B 학습: 54일 동안 예기치 않은 중단 419번, H100 최대 16,384장 → GPU 한 장·하루당 중단 */
+function fl(){ const perDay=FL_RATE*S.flN, mtbfH=24/perDay, C=S.flC/60, R=S.flR/60, opt=Math.sqrt(2*C*mtbfH), T=S.flT==='opt'?opt:S.flT/60;
+  /* 하루 24시간을 흉내 낸다. 고장은 고르게 퍼뜨리고, 저장 뒤 쌓인 학습이 T가 되면 C 동안 저장한다 */
+  let sd=7; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; }; const n=Math.max(0,Math.round(perDay)), fails=[...Array(n)].map(()=>0.3+rnd()*23.4).sort((a,b)=>a-b);
+  const seg=[]; let t=0, unc=0, useful=0, fi=0;
+  const fail=at=>{ seg.push(['lost',at-unc,at]); unc=0; t=at; fi++; const re=Math.min(24,t+R); seg.push(['restart',t,re]); t=re; while(fi<fails.length&&fails[fi]<t) fi++; };
+  while(t<24){ const nf=fi<fails.length?fails[fi]:Infinity, we=Math.min(24,t+(T-unc));
+    if(nf<we){ seg.push(['work',t,nf]); unc+=nf-t; fail(nf); continue; }
+    seg.push(['work',t,we]); unc+=we-t; t=we; if(t>=24) break;
+    const ce=Math.min(24,t+C);
+    if(nf<ce){ seg.push(['ckpt',t,nf]); const keep=unc; unc=keep; seg.push(['lost',t-keep,t]); unc=0; t=nf; fi++; const re=Math.min(24,t+R); seg.push(['restart',t,re]); t=re; while(fi<fails.length&&fails[fi]<t) fi++; continue; }
+    seg.push(['ckpt',t,ce]); useful+=unc; unc=0; t=ce; }
+  useful+=unc; const lost=seg.filter(s=>s[0]==='lost').reduce((a,s)=>a+(s[2]-s[1]),0);
+  const waste=C/T+(T/2+R)/mtbfH, avg=Math.max(0,Math.min(1,1-waste));
+  return {perDay,mtbfH,C,R,opt,T,fails,seg,good:avg,day:useful/24,lost};
+}
+const fmtH=h=>h>=1?(h>=10?Math.round(h):h.toFixed(1))+'시간':Math.round(h*60)+'분';
+function buildFail(){
+  reset(); const r=fl(), W=22, k=W/24, x0=-W/2, col={work:0x3f86c9,ckpt:0x7f6fd0,lost:0xd0604a,restart:0x5a5e64};
+  box(W+3,0.2,8,0x1c1f23,0,-0.32,0.6,'',{metal:.4,rough:.6});
+  r.seg.forEach(([kind,a,b])=>{ const w=(b-a)*k; if(w<0.01) return; const h=kind==='lost'?0.78:kind==='ckpt'?0.6:0.5, z=kind==='lost'?-0.9:0;
+    box(w,h,kind==='lost'?0.5:1.2,col[kind],x0+(a+b)/2*k,h/2,z,'fl'+kind,{metal:.25,rough:.5,edge:false}); });
+  r.fails.forEach(t=>{ const x=x0+t*k; box(0.08,1.6,0.08,0xd0604a,x,0.8,1.2,'flfail',{shadow:false,edge:false}); });
+  for(let h=0;h<=24;h+=6){ const x=x0+h*k; box(0.04,0.04,3.2,0x8d9196,x,0.02,1.6,'',{shadow:false,edge:false}); label(h+'시',x,0.1,3.4,'','flwork'); }
+  label(`GPU ${S.flN.toLocaleString('ko-KR')}장 · 고장이 이렇게 난 하루 예시`,0,2.2,-2.2,'big','flwork');
+  if(r.fails.length) label(`고장 ${r.fails.length}번`,x0+r.fails[0]*k,1.9,1.2,'','flfail');
+  newSig=sigNow();
+}
+function flLive(){ const r=fl();
+  return `<div class="readout"><div class="sub">GPU ${S.flN.toLocaleString('ko-KR')}장 · 저장 ${S.flC}분 · 재시작 ${S.flR}분 · 저장 간격 ${S.flT==='opt'?'최적':S.flT+'분'}</div>
+   <div class="duo"><div><div class="big">${fmtH(r.mtbfH)}</div><div class="sub">고장 간격 (MTBF) · 하루 ${r.perDay.toFixed(1)}번</div></div><div><div class="big">${Math.round(r.good*100)}%</div><div class="sub">평균적으로 학습이 실제로 나아간 시간</div></div></div>
+   <p class="now"><b>권장 저장 간격</b> √(2 × ${S.flC}분 × ${fmtH(r.mtbfH)}) ≈ ${fmtH(r.opt)}. ${S.flT==='opt'?'지금 이 간격으로 저장합니다.':`지금은 ${S.flT}분마다 저장합니다.`}</p>
+   <ul class="tnleg"><li><i style="background:#3f86c9"></i>학습</li><li><i style="background:#7f6fd0"></i>저장</li><li><i style="background:#d0604a"></i>고장으로 잃은 학습</li><li><i style="background:#5a5e64"></i>재시작</li></ul>
+   <div class="sub">고장 빈도는 Llama 3 405B 학습 기록(54일, 예기치 않은 중단 419번, H100 최대 16,384장)을 GPU 수에 비례해 줄인 어림입니다. 비율은 1차 어림(낭비 ≈ 저장 시간/간격 + (간격/2 + 재시작)/MTBF)이고, 3D는 고장을 무작위로 넣은 하루 한 예입니다.</div></div>`; }
+Object.assign(NEWBUILD,{tune:buildTune,fail:buildFail});
+Object.assign(NEWSIG,{tune:()=>[S.tnLoader,S.tnNuma,S.tnBf16,S.tnOverlap,S.tnGraph],fail:()=>[S.flN,S.flC,S.flR,S.flT]});
+p3Change=(f=>function(k){ f(k); if(/^(tn|fl)[A-Z]/.test(k)) renderLeft(); })(p3Change);
+Object.assign(LEGEND,{tune:TN_PARTS.map(([,n,c])=>['#'+c.toString(16).padStart(6,'0'),'thick',n]),fail:[['#3f86c9','thick','학습'],['#7f6fd0','thick','저장 (체크포인트)'],['#d0604a','thick','고장으로 잃은 학습'],['#5a5e64','thick','재시작'],['#d0604a','plate','고장 시점']]});
+
+STEPS.push(
+{ part:'3부', title:'성능 튜닝: 스텝 시간 쪼개 보기', scene:'tune', dom:['A1','P'], badges:[A1,P3], cam:null,
+  goals:['학습 한 스텝을 데이터 기다림, 실행 준비, 계산, 통신으로 쪼개 볼 수 있습니다','몫이 큰 것부터 줄이는 순서로 튜닝할 수 있습니다','로더, NUMA, 혼합 정밀도, 통신 겹치기, CUDA Graphs가 각각 무엇을 줄이는지 압니다'],
+  key:['한 스텝 시간은 데이터 기다림 + 실행 준비 + 계산 + 드러난 통신입니다. 프로파일러로 각 몫을 먼저 잽니다.','가장 큰 몫부터 줄입니다. 한 번에 하나만 바꾸고 다시 잽니다.','데이터는 로더·고정 메모리·NUMA, 계산은 혼합 정밀도, 통신은 겹치기, 실행 준비는 CUDA Graphs·torch.compile이 줄입니다.'],
+  body:()=>`<div class="sec prose"><h3>해 보기</h3><p>왼쪽에서 튜닝을 하나씩 켜 보세요. 3D의 막대가 GPU마다 한 스텝의 시간이고, 색마다 몫이 다릅니다. 숫자는 예시입니다.</p></div>
+   <div class="sec"><h3>몫별로 줄이는 방법</h3><div class="tbl"><table class="t"><thead><tr><th>몫</th><th>보는 곳</th><th>줄이는 방법</th></tr></thead><tbody>
+    <tr><td>데이터 기다림</td><td>nsys 타임라인의 커널 사이 빈칸</td><td>DataLoader num_workers·pin_memory, 전처리 줄이기·GPU로 옮기기, 로더를 GPU 쪽 NUMA에 붙이기</td></tr>
+    <tr><td>실행 준비</td><td>짧은 커널이 많고 CPU가 바쁨</td><td>CUDA Graphs, torch.compile로 커널 묶기, 파이썬에서 매 스텝 .item()·print 줄이기</td></tr>
+    <tr><td>계산</td><td>커널 시간, 텐서 코어 활동(DCGM)</td><td>BF16 혼합 정밀도(autocast에 dtype=torch.bfloat16), 큰 행렬 크기, FlashAttention 같은 최적 커널</td></tr>
+    <tr><td>드러난 통신</td><td>all-reduce가 계산과 안 겹치는 구간</td><td>DDP 기울기 묶음(bucket)으로 역전파와 겹치기, NVLink·IB 경로 확인, 통신량 줄이기</td></tr></tbody></table></div></div>
+   <div class="sec"><h3>튜닝 순서</h3><ol class="ilist"><li>하드웨어가 제 속도인지 먼저 봅니다(클록·링크, 앞 단계 진단).</li><li>한 스텝을 몫으로 쪼개 잽니다.</li><li>가장 큰 몫 하나를 줄이고 다시 잽니다.</li><li>목표에 닿거나 계산 몫만 남으면 멈춥니다.</li></ol></div>`,
+  live:()=>tnLive(), compare:[],
+  quiz:{q:'한 스텝 가운데 데이터 기다림이 40%입니다. 가장 먼저 할 일은?',opts:['로더 일꾼 수, 고정 메모리, 전처리 위치를 점검한다','GPU를 더 빠른 모델로 바꾼다','통신을 계산과 겹치게 한다'],a:0,ex:'가장 큰 몫부터 줄여야 효과가 큽니다. 데이터를 기다리는 동안은 GPU가 빨라져도 소용이 없습니다.'} },
+{ part:'3부', title:'대규모 학습의 장애와 복구', scene:'fail', dom:['A3','P'], badges:[A3,P3], cam:null,
+  goals:['GPU 수가 늘면 고장 간격이 짧아지는 이유를 설명할 수 있습니다','저장 시간과 고장 간격으로 체크포인트 간격을 정할 수 있습니다','실제로 학습이 나아간 시간 비율을 높이는 운영 방법을 압니다'],
+  key:['GPU가 많을수록 어딘가 고장 날 확률이 커서, 클러스터 고장 간격(MTBF)은 GPU 수에 반비례해 짧아집니다.','체크포인트를 자주 하면 저장에, 드물게 하면 고장 때 잃는 작업에 시간을 씁니다. 균형점은 약 √(2 × 저장 시간 × MTBF)입니다.','저장을 빠르게, 재시작을 빠르게, 고장 날 노드를 미리 빼는 것이 실제 학습 시간을 늘립니다.'],
+  body:()=>`<div class="sec prose"><h3>해 보기</h3><p>왼쪽에서 GPU 수, 저장 시간, 재시작 시간, 저장 간격을 바꿔 보세요. 3D는 하루 24시간을 한 줄로 펼친 것이고, 빨간 막대가 고장으로 잃은 학습입니다.</p></div>
+   <div class="sec"><h3>실제 기록: Llama 3 405B</h3><p class="note" style="margin-top:0">H100 최대 16,384장으로 학습하는 동안 54일 사이에 예기치 않은 중단이 419번 있었습니다. 하루 약 8번, 3시간에 한 번 꼴입니다. 원인의 약 78%가 하드웨어 문제(확인 또는 추정)였고, GPU 관련이 58.7%로 가장 많았습니다(GPU 고장, HBM3 메모리 등). 그런데도 자동화 덕분에 실제 학습 시간 비율은 90%를 넘었습니다.</p></div>
+   <div class="sec"><h3>실제 학습 시간을 늘리는 방법</h3><ul class="ilist">
+    <li><b>저장 빠르게</b> 병렬 파일시스템, 비동기 저장, 로컬 NVMe에 먼저 쓰기 (스토리지 단계)</li>
+    <li><b>재시작 빠르게</b> 자동 재시작, 미리 점검한 예비 노드, 체크포인트 빠른 로딩</li>
+    <li><b>고장 전에 빼기</b> 작업 전 짧은 건강 검사(dcgmi diag -r 1, 짧은 nccl-tests), Xid·ECC·링크 오류 추세로 미리 drain, 느린 노드(straggler) 찾기</li></ul></div>`,
+  live:()=>flLive(), compare:[],
+  quiz:{q:'다른 조건은 같고 GPU 수만 4배로 늘렸습니다. 클러스터 고장 간격(MTBF)은?',opts:['약 1/4로 짧아진다','그대로다','약 4배 길어진다'],a:0,ex:'GPU마다 고장이 독립적으로 난다고 보면, 장수가 4배면 하루 고장 횟수도 4배라 고장 간격은 1/4이 됩니다. 그래서 큰 클러스터일수록 저장과 재시작을 빠르게 만드는 것이 중요합니다.'} }
+);
+LEFT[28]=()=>`<div class="grp"><span class="gl">튜닝 켜기</span>${[['tnLoader','로더 일꾼·고정 메모리','데이터 기다림'],['tnNuma','GPU 쪽 NUMA에 고정','데이터·CPU'],['tnBf16','BF16 혼합 정밀도','계산'],['tnOverlap','통신과 계산 겹치기','드러난 통신'],['tnGraph','CUDA Graphs·torch.compile','실행 준비']].map(([k,n,s])=>opt('checkbox',k,1,`<b>${n}</b><small>${s}</small>`,S[k],`data-k="${k}"`)).join('')}</div>
+  <div class="grp"><span class="gl">다시 해 보기</span><button class="actbtn ghost" data-act="p3tnreset" style="margin-top:0">모두 끄기</button></div>`;
+LEFT[29]=()=>mkRow('flN',[1024,4096,16384],'GPU 수',v=>(v/1024)+'K')+mkRow('flC',[1,5,15],'저장 시간 (분)')+mkRow('flR',[10,30],'재시작 시간 (분)')
+  +`<div class="grp"><span class="gl">저장 간격</span><div class="optrow">${['opt',30,60,180].map(v=>opt('radio','flT',v,`<b>${v==='opt'?'최적':v>=60?(v/60)+'시간':v+'분'}</b>`,S.flT===v,'data-k="flT"')).join('')}</div></div>`;
+p3Action=(f=>function(a){ if(a==='p3tnreset'){ v31Set({tnLoader:false,tnNuma:false,tnBf16:false,tnOverlap:false,tnGraph:false}); return; } f(a); })(p3Action);
+/* flT는 'opt' 또는 숫자라서 바꿀 때 형을 맞춘다 */
+$('#sidebody').addEventListener('change',e=>{ const t=e.target; if(t.dataset&&t.dataset.k==='flT'){ S.flT=t.value==='opt'?'opt':+t.value; } },true);
+SLIDES[28]=[
+  {t:'느린 학습을 몫으로 쪼갠다',d:`학습 한 스텝은 데이터를 기다리는 시간, CPU가 커널을 실행 준비하는 시간, GPU 계산, 계산과 겹치지 못한 통신으로 나뉩니다. 3D의 막대가 GPU마다 한 스텝이고, 지금은 아무 튜닝도 안 한 상태입니다. 숫자는 이해를 돕는 예시입니다.`,set:{tnLoader:false,tnNuma:false,tnBf16:false,tnOverlap:false,tnGraph:false},go:hl()},
+  {t:'가장 큰 몫부터',d:`지금은 계산 다음으로 데이터 기다림이 큽니다. 로더 일꾼을 늘리고 고정 메모리(pin_memory)를 쓰면 다음 배치가 미리 준비되어 기다림이 거의 사라집니다.`,set:{tnLoader:true,tnNuma:false,tnBf16:false,tnOverlap:false,tnGraph:false},go:hl('tndata')},
+  {t:'로더를 GPU 쪽 CPU에 붙인다',d:`로더 프로세스가 반대편 CPU에서 돌면 메모리를 소켓 너머로 가져옵니다. GPU와 같은 NUMA 노드에 붙이면(numactl 등) 데이터 준비와 실행 준비가 조금 더 빨라집니다. 1부 NUMA 단계와 같은 이야기입니다.`,set:{tnNuma:true},go:hl('tndata','tnlaunch')},
+  {t:'혼합 정밀도로 텐서 코어를 쓴다',d:`FP32로 계산하던 것을 BF16 혼합 정밀도로 바꾸면 행렬 곱이 텐서 코어로 가서 계산 몫이 절반 아래로 줄어듭니다. 원본 가중치는 FP32로 두어 정확도를 지킵니다.`,set:{tnBf16:true},go:hl('tncompute')},
+  {t:'통신을 계산 뒤에 숨긴다',d:`데이터 병렬(DDP)은 역전파가 끝난 기울기 묶음(bucket)부터 all-reduce를 시작해서 통신을 계산과 겹칩니다. 다 겹치지 못한 부분만 스텝 시간에 드러납니다. 이 몫이 크면 NVLink·InfiniBand 경로부터 확인합니다.`,set:{tnOverlap:true},go:hl('tncomm')},
+  {t:'실행 준비를 줄인다',d:`작은 커널이 아주 많으면 CPU가 커널을 하나씩 실행하는 준비 시간이 쌓입니다. CUDA Graphs는 커널 묶음을 한 번에 실행하고, torch.compile은 커널을 합쳐서 그 시간을 줄입니다.`,set:{tnGraph:true},go:hl('tnlaunch')},
+  {t:'한 번에 하나씩, 다시 잰다',d:`처음 860ms가 약 260ms로 줄었습니다(예시). 실제로는 한 번에 하나만 바꾸고 다시 재야 무엇이 효과였는지 압니다. GPU 한 장이나 서버 한 대만 느리면 튜닝보다 앞 단계의 진단이 먼저입니다.`,set:{tnLoader:true,tnNuma:true,tnBf16:true,tnOverlap:true,tnGraph:true},go:hl()}
+];
+SLIDES[29]=[
+  {t:'큰 클러스터는 늘 어딘가 고장 나 있다',d:`Llama 3 405B는 H100 최대 16,384장으로 학습했는데, 54일 동안 예기치 않은 중단이 419번 있었습니다. 3시간에 한 번 꼴입니다. 원인의 약 78%가 하드웨어였고 GPU와 HBM 메모리가 가장 많았습니다. 3D는 이 빈도로 본 하루 24시간입니다.`,set:{flN:16384,flC:5,flR:30,flT:'opt'},go:hl('flfail')},
+  {t:'GPU가 늘면 고장 간격이 줄어든다',d:`GPU마다 고장이 따로 난다고 보면, GPU 수가 4배면 고장도 4배로 잦아집니다. 왼쪽에서 GPU 수를 1K로 줄여 보세요. 고장 간격(MTBF)이 길어지고 빨간 막대가 줄어듭니다.`,set:{flN:1024},go:hl('flfail')},
+  {t:'체크포인트는 얼마나 자주?',d:`자주 저장하면 저장하는 시간(보라)이 늘고, 드물게 저장하면 고장 때 마지막 저장 뒤의 학습(빨강)을 잃습니다. 균형점은 약 √(2 × 저장 시간 × MTBF)입니다(Young의 공식). 왼쪽에서 저장 간격을 3시간으로 바꿔 비교해 보세요.`,set:{flN:16384,flT:'opt'},go:hl('flckpt','fllost')},
+  {t:'저장이 빨라야 자주 저장한다',d:`저장 시간이 15분이면 자주 저장할 수 없어서 고장 때 잃는 학습이 커집니다. 병렬 파일시스템, 비동기 저장, 로컬 NVMe에 먼저 쓰기로 저장 시간을 1분대로 줄이면 실제 학습 시간이 늘어납니다.`,set:{flC:15},go:hl('flckpt')},
+  {t:'빨리 돌아오기',d:`고장 뒤 다시 학습하기까지의 시간(회색)도 줄여야 합니다. 작업을 자동으로 다시 시작하고, 미리 점검해 둔 예비 노드로 바로 바꾸고, 체크포인트를 빨리 읽어 오면 재시작이 짧아집니다.`,set:{flC:1,flR:10},go:hl('flrestart')},
+  {t:'고장 나기 전에 뺀다',d:`작업을 시작하기 전에 노드마다 짧은 건강 검사(dcgmi diag -r 1, 짧은 nccl-tests)를 돌리고, Xid·ECC·링크 오류가 늘어나는 노드는 미리 drain합니다. 모니터링과 진단 단계에서 본 신호들이 여기서 쓰입니다.`,set:{flN:16384,flC:1,flR:10,flT:'opt'},go:hl()}
+];
+/* 4단계: 랙 단위 NVLink (GB200 NVL72) */
+{ const L=SLIDES[4]; L.push({t:'NVLink를 랙 전체로: GB200 NVL72',d:`Blackwell 세대의 GB200 NVL72는 NVLink 스위치를 랙 안에 따로 두고 GPU 72장을 하나의 NVLink 영역으로 묶습니다. GPU마다 NVLink 1.8 TB/s, 랙 전체로 130 TB/s입니다. 서버 8장 단위를 넘어 텐서 병렬을 펼칠 수 있지만, 랙 하나에 120 kW급 냉각이 필요해 수랭으로 식힙니다.`,set:{mode:'sxm',mig:NOMIG()}}); }
+/* 정리 장면: 3부 끝을 29로 */
+{ const L=SLIDES[27], i=L.findIndex(s=>s.recap); const rc=i>=0?L.splice(i,1)[0]:null;
+  const items=RECAP[17][1].concat([[27,'오류 없이 느리면 클록·전력·링크 카운터를 나란히 보고, NCCL은 로그와 타임아웃이 없는 rank부터 봅니다.'],[28,'한 스텝을 몫으로 쪼개고 가장 큰 몫부터 줄입니다.'],[29,'GPU가 많을수록 고장 간격이 짧아서, 저장·재시작을 빠르게 하고 고장 날 노드를 미리 뺍니다.']]);
+  SLIDES[29].push({t:'3부 정리: 운영',d:'이 부분에서 배운 것을 모았습니다. 단계 번호를 누르면 그 단계로 돌아갑니다. 다음은 확인 문제입니다.',recap:true,extra:()=>`<ul class="recap">${items.map(([s,x])=>`<li><button class="linkbtn" data-gostep="${s}">${dno(s)}단계</button><span>${x}</span></li>`).join('')}</ul>`}); }
+FQ.push({s:28,q:'학습 한 스텝을 쪼갰더니 데이터 기다림이 가장 큽니다. 먼저 해 볼 것은?',o:['BF16 혼합 정밀도 켜기','로더 일꾼 수·고정 메모리 점검','CUDA Graphs 켜기'],a:1},
+        {s:29,q:'저장 시간이 길어 체크포인트를 드물게 합니다. 고장이 나면 무엇이 커집니까?',o:['마지막 저장 뒤 잃는 학습','GPU 온도','NVLink 대역폭'],a:0});
+FQW.push('가장 큰 몫부터 줄입니다. 데이터를 기다리는 동안은 계산을 빠르게 해도 스텝 시간이 거의 줄지 않습니다.',
+         '고장이 나면 마지막 저장 이후의 학습을 다시 해야 합니다. 저장 간격이 길수록 잃는 양이 커집니다.');
+STEPS[18].goals=STEPS[18].goals.map(s=>s.replace(/\d+문제/,FQ.length+'문제')); STEPS[18].key=STEPS[18].key.map(s=>s.replace(/\d+문제/,FQ.length+'문제'));
+SLIDES[18][0].d=SLIDES[18][0].d.replace(/\d+문제/,FQ.length+'문제');
+addG({'MTBF':'Mean Time Between Failures. 고장과 다음 고장 사이의 평균 시간입니다. 클러스터가 클수록 짧아집니다.','Goodput':'전체 시간 가운데 학습이 실제로 앞으로 나아간 시간의 비율입니다. 저장, 재시작, 고장으로 잃은 학습을 빼고 셉니다.','straggler':'다른 노드보다 느린 노드입니다. 동기식 학습에서는 가장 느린 노드가 전체 속도를 정합니다.','CUDA Graphs':'여러 GPU 커널 실행을 한 번에 묶어 실행해서 CPU의 실행 준비 시간을 줄이는 CUDA 기능입니다.','torch.compile':'PyTorch 모델을 분석해 커널을 합치는 등 최적화된 코드로 바꾸는 기능입니다.','NVL72':'GB200 NVL72. GPU 72장을 랙 하나의 NVLink 영역으로 묶은 NVIDIA 랙 시스템입니다.'});
+Object.assign(PARTS,{
+  tndata:{name:'데이터 기다림',what:'GPU가 다음 배치를 기다리는 시간입니다.',look:'막대의 갈색 부분입니다.',tip:'로더 일꾼, 고정 메모리, 전처리 위치, 스토리지 속도가 정합니다.'},
+  tnlaunch:{name:'실행 준비 (CPU)',what:'CPU가 커널을 하나씩 실행시키는 데 드는 시간입니다.',look:'막대의 노란 부분입니다.',tip:'작은 커널이 많을수록 커집니다. CUDA Graphs, torch.compile이 줄입니다.'},
+  tncompute:{name:'계산',what:'순전파와 역전파 계산 시간입니다.',look:'막대의 파란 부분입니다.',tip:'BF16 혼합 정밀도로 텐서 코어를 쓰면 크게 줄어듭니다.'},
+  tncomm:{name:'드러난 통신',what:'계산과 겹치지 못하고 스텝 시간에 더해진 통신입니다.',look:'막대의 청록 부분입니다.',tip:'DDP는 역전파와 통신을 겹칩니다. 이 몫이 크면 링크와 NCCL 경로를 확인합니다.'},
+  flwork:{name:'학습',what:'학습이 앞으로 나아간 시간입니다.',look:'파란 막대입니다.',tip:'이 비율이 높을수록 같은 GPU로 더 많이 학습합니다.'},
+  flckpt:{name:'체크포인트 저장',what:'학습 상태를 저장하는 시간입니다.',look:'보라 막대입니다.',tip:'저장이 빠를수록 자주 저장할 수 있습니다.'},
+  fllost:{name:'잃은 학습',what:'고장 때문에 마지막 저장 이후 다시 해야 하는 학습입니다.',look:'앞쪽의 빨간 막대입니다.',tip:'저장 간격이 길수록 커집니다.'},
+  flrestart:{name:'재시작',what:'고장 뒤 작업을 다시 띄우고 체크포인트를 읽는 시간입니다.',look:'회색 막대입니다.',tip:'자동 재시작과 예비 노드로 줄입니다.'},
+  flfail:{name:'고장 시점',what:'작업이 예기치 않게 멈춘 때입니다.',look:'뒤쪽의 빨간 기둥입니다.',tip:'큰 클러스터에서는 하루에도 여러 번 납니다.'}
+});
+MYTHS[28]={myths:[['GPU를 바꾸면 학습이 그만큼 빨라진다.','데이터 기다림이나 통신이 큰 몫이면 GPU를 바꿔도 계산 몫만 줄어듭니다. 먼저 한 스텝을 쪼개 무엇이 큰지 봅니다.'],['튜닝은 여러 개를 한꺼번에 켜는 게 빠르다.','한꺼번에 바꾸면 무엇이 효과였는지, 무엇이 오히려 느리게 했는지 모릅니다. 하나씩 바꾸고 다시 잽니다.'],['GPU 사용률 100%면 더 빠르게 할 게 없다.','사용률은 커널이 돈 시간 비율이라, 실행 준비가 많거나 정밀도가 높아도 100%가 나옵니다. 텐서 코어 활동과 스텝 시간을 같이 봅니다.']],
+  refs:[['PyTorch: DDP 설계 (기울기 bucket과 통신 겹치기)','https://docs.pytorch.org/docs/stable/notes/ddp.html'],['PyTorch: 자동 혼합 정밀도 (torch.amp)','https://docs.pytorch.org/docs/stable/amp.html'],['NVIDIA 기술 블로그: CUDA Graphs','https://developer.nvidia.com/blog/cuda-graphs/'],['PyTorch: 자동 혼합 정밀도 예제 (텐서 코어)','https://docs.pytorch.org/tutorials/recipes/recipes/amp_recipe.html'],['PyTorch: torch.compile 소개','https://docs.pytorch.org/tutorials/intermediate/torch_compile_tutorial.html'],['Nsight Systems 사용자 가이드','https://docs.nvidia.com/nsight-systems/UserGuide/index.html']]};
+MYTHS[29]={myths:[['좋은 하드웨어를 쓰면 대규모 학습이 거의 멈추지 않는다.','GPU 수만 장이면 부품 하나하나가 튼튼해도 클러스터 전체로는 몇 시간마다 어딘가 고장 납니다. 고장을 전제로 저장·재시작을 설계합니다.'],['체크포인트는 자주 할수록 좋다.','저장하는 동안 학습이 멈추거나 느려집니다. 저장 시간과 고장 간격에 맞는 간격이 있습니다.'],['고장 난 노드만 빼면 된다.','느려지기만 하는 노드(straggler)도 전체를 늦춥니다. 오류 추세와 성능 편차로 미리 찾습니다.']],
+  refs:[['The Llama 3 Herd of Models (학습 중 중단 통계, 3.3.4절·표 5)','https://arxiv.org/abs/2407.21783'],['Meta, Revisiting Reliability in Large-Scale ML Research Clusters (고장 간격은 GPU 수에 반비례)','https://arxiv.org/abs/2410.21680'],['Google Cloud: Goodput으로 ML 생산성 재기','https://cloud.google.com/blog/products/ai-machine-learning/goodput-metric-as-measure-of-ml-productivity'],['Understanding Stragglers in Large Model Training (OSDI 2025)','https://arxiv.org/abs/2505.05713'],['Young (1974), A first order approximation to the optimum checkpoint interval','https://doi.org/10.1145/361147.361115'],['Daly (2006), A higher order estimate of the optimum checkpoint interval','https://doi.org/10.1016/j.future.2004.11.016']]};
+ORDER.splice(0,ORDER.length,0,20,21,22,23,1,2,3,4,19,5,6,11,7,8,9,24,10,12,13,14,25,15,16,17,27,28,29,26,18);
+SYM.splice(7,0,['GPU는 멀쩡한데 학습이 기대보다 느리다',['nsys profile -t cuda,nvtx,osrt -o step python train.py','PyTorch 프로파일러로 한 스텝 쪼개기'],[['성능 튜닝: 스텝 시간',()=>goStep(28)],['진단: Nsight Systems',goDg('nsys')]]],
+  ['대규모 학습이 자주 끊긴다',['sudo dmesg -T | grep -i xid','dcgmi diag -r 1'],[['장애와 복구',()=>goStep(29)],['장애 대응',()=>goStep(17)]]]);
+
+if(MYTHS[4]&&MYTHS[4].refs) MYTHS[4].refs.push(['NVIDIA GB200 NVL72 (GPU 72장 NVLink 영역, 1.8 TB/s·130 TB/s)','https://www.nvidia.com/en-us/data-center/gb200-nvl72/']);
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
 $('#btn-prev').addEventListener('click',()=>goStep(stepBy(-1)));
