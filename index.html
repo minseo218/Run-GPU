@@ -544,6 +544,22 @@ table.t thead th{font-size:11.5px}
 .tnleg li{display:flex;align-items:center;gap:6px}
 .tnleg i{width:10px;height:10px;border-radius:2px;display:block}
 .tnleg b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.coach{position:fixed;inset:0;z-index:45}
+.coach-hole{position:fixed;border-radius:10px;box-shadow:0 0 0 200vmax rgba(6,8,12,.62);outline:2px solid var(--accent);outline-offset:2px;transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.coach-tip{position:fixed;width:min(320px,calc(100vw - 32px));box-sizing:border-box;background:var(--card);color:var(--ink);border-radius:10px;box-shadow:0 0 0 1px var(--line),0 18px 44px rgba(0,0,0,.4);padding:14px 16px 12px;transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1)}
+.coach-tip::before{content:"";position:absolute;width:12px;height:12px;background:var(--card);transform:rotate(45deg)}
+.coach-tip[data-place="bottom"]::before{top:-6px;left:calc(var(--ax,50%) - 6px);box-shadow:-1px -1px 0 var(--line)}
+.coach-tip[data-place="top"]::before{bottom:-6px;left:calc(var(--ax,50%) - 6px);box-shadow:1px 1px 0 var(--line)}
+.coach-tip[data-place="right"]::before{left:-6px;top:calc(var(--ay,50%) - 6px);box-shadow:-1px 1px 0 var(--line)}
+.coach-tip[data-place="left"]::before{right:-6px;top:calc(var(--ay,50%) - 6px);box-shadow:1px -1px 0 var(--line)}
+.coach-tip[data-place="inside"]::before{display:none}
+.coach-tip .cn{font:600 11.5px var(--mono);color:var(--accent);letter-spacing:.02em}
+.coach-tip h4{margin:4px 0 4px;font-size:15.5px;font-weight:650;letter-spacing:-.01em}
+.coach-tip p{margin:0;font-size:13.5px;line-height:1.6;color:color-mix(in srgb,var(--ink) 80%,transparent)}
+.coach-nav{display:flex;align-items:center;gap:6px;margin-top:14px}
+.coach-nav .skip{margin-right:auto;font:500 12.5px var(--sans);color:var(--muted);background:none;border:0;padding:4px 0;cursor:pointer}
+.coach-nav .skip:hover{color:var(--ink)}
+@media (prefers-reduced-motion: reduce){ .coach-hole,.coach-tip{transition:none} }
 </style>
 </head>
 <body>
@@ -5240,6 +5256,51 @@ SYM.splice(7,0,['GPU는 멀쩡한데 학습이 기대보다 느리다',['nsys pr
   ['대규모 학습이 자주 끊긴다',['sudo dmesg -T | grep -i xid','dcgmi diag -r 1'],[['장애와 복구',()=>goStep(29)],['장애 대응',()=>goStep(17)]]]);
 
 if(MYTHS[4]&&MYTHS[4].refs) MYTHS[4].refs.push(['NVIDIA GB200 NVL72 (GPU 72장 NVLink 영역, 1.8 TB/s·130 TB/s)','https://www.nvidia.com/en-us/data-center/gb200-nvl72/']);
+/* ---------- v37: 첫 방문 안내를 화면 둘러보기로. 실제 요소를 밝히고 옆에 말풍선 ---------- */
+const TOUR=[
+  {el:()=>[$('.stepnav'),$('#strip')],t:'단계 이동',d:'왼쪽부터 순서대로 배웁니다. 가운데 단계 이름을 누르면 전체 단계와 진도가 나옵니다. 아래 얇은 막대의 칸을 눌러도 그 단계로 갑니다.'},
+  {el:()=>[$('#story')],t:'장면 카드',d:'단계마다 장면 몇 개로 설명합니다. 다음을 누르거나 키보드 ← →로 넘깁니다. 밑줄 친 말을 누르면 뜻이 나옵니다. 마지막 장면의 확인 문제를 맞히면 그 단계가 완료됩니다.'},
+  {el:'view',t:'3D',d:'드래그로 돌리고, 휠이나 두 손가락으로 확대합니다. 부품을 누르면 설명이 나옵니다.',place:'inside'},
+  {el:()=>[$('#side')],t:'이 단계에서 고르기',d:'값을 바꾸면 3D와 아래 숫자가 바로 바뀝니다. 접어 두면 3D를 넓게 볼 수 있습니다.'},
+  {el:()=>[$('#hud')],t:'상황판 · 터미널',d:'상황판은 지금 장면의 숫자를 보여 줍니다. 터미널이 있는 단계에서는 탭을 눌러 실제 명령을 연습합니다. 명령을 실행하면 3D에서 관련 부품이 밝아집니다.',skip:()=>$('#hud').hidden},
+  {el:()=>[$('#panel')],t:'자세히',d:'더 깊은 설명, 흔한 오해, NVIDIA 공식 문서 출처가 있습니다.'},
+  {el:()=>[$('#btn-sym2')],t:'증상으로 찾기',d:'"학습이 느려요"처럼 증상을 고르면 먼저 볼 명령과 연습할 단계로 바로 갑니다.'},
+  {el:()=>[$('#btn-more')],t:'메뉴',d:'용어집, 비교표, 이 안내 다시 보기, 그리고 이름표·드래그 방식 같은 보기 설정이 있습니다.'}
+];
+let tourI=-1;
+document.body.insertAdjacentHTML('beforeend','<div class="coach" id="coach" hidden><div class="coach-hole" id="coachHole"></div><div class="coach-tip" id="coachTip" role="dialog" aria-modal="true" aria-labelledby="coachT"><div class="cn" id="coachN"></div><h4 id="coachT"></h4><p id="coachD"></p><div class="coach-nav"><button type="button" class="skip" id="coachSkip">건너뛰기</button><button type="button" class="tbtn" id="coachPrev">이전</button><button type="button" class="tbtn primary" id="coachNext">다음</button></div></div></div>');
+const tourRect=s=>{ if(s.el==='view'){ const wide=innerWidth>860, sd=$('#side').getBoundingClientRect(), st=$('#story').getBoundingClientRect(), pn=$('#panel').getBoundingClientRect(), hd=$('#hud'), hr=hd.hidden?null:hd.getBoundingClientRect();
+    const l=wide?sd.right+16:16, r=wide&&!$('#panel').classList.contains('collapsed')?pn.left-16:innerWidth-16, t=Math.max(st.bottom,wide?0:sd.bottom)+16, b=(hr?hr.top:(wide?innerHeight:pn.top))-16;
+    return {left:l,top:t,right:r,bottom:Math.max(t+80,b)}; }
+  const els=s.el().filter(e=>e&&!e.hidden); if(!els.length) return null; const R=els.map(e=>e.getBoundingClientRect());
+  return {left:Math.min(...R.map(r=>r.left)),top:Math.min(...R.map(r=>r.top)),right:Math.max(...R.map(r=>r.right)),bottom:Math.max(...R.map(r=>r.bottom))}; };
+function tourShow(){ const s=TOUR[tourI], hole=$('#coachHole'), tip=$('#coachTip'), r0=tourRect(s); if(!r0){ return tourGo(1); }
+  const p=6, r={left:r0.left-p,top:r0.top-p,right:r0.right+p,bottom:r0.bottom+p}; r.w=r.right-r.left; r.h=r.bottom-r.top; r.cx=r.left+r.w/2; r.cy=r.top+r.h/2;
+  Object.assign(hole.style,{left:r.left+'px',top:r.top+'px',width:r.w+'px',height:r.h+'px'});
+  $('#coachN').textContent=`${tourI+1} / ${TOUR.length}`; $('#coachT').textContent=s.t; $('#coachD').textContent=s.d;
+  $('#coachPrev').disabled=tourI===0; $('#coachNext').textContent=tourI===TOUR.length-1?'시작하기':'다음';
+  const tw=tip.offsetWidth, th=tip.offsetHeight, gap=14, W=innerWidth, H=innerHeight, clampX=x=>Math.max(16,Math.min(W-tw-16,x)), clampY=y=>Math.max(16,Math.min(H-th-16,y));
+  let place=s.place, x, y;
+  if(!place){ place=H-r.bottom>=th+gap+16?'bottom':r.top>=th+gap+16?'top':W-r.right>=tw+gap+16?'right':r.left>=tw+gap+16?'left':'inside'; }
+  if(place==='bottom'){ x=clampX(r.cx-tw/2); y=r.bottom+gap; tip.style.setProperty('--ax',(r.cx-x)+'px'); }
+  else if(place==='top'){ x=clampX(r.cx-tw/2); y=r.top-gap-th; tip.style.setProperty('--ax',(r.cx-x)+'px'); }
+  else if(place==='right'){ x=r.right+gap; y=clampY(r.cy-th/2); tip.style.setProperty('--ay',(r.cy-y)+'px'); }
+  else if(place==='left'){ x=r.left-gap-tw; y=clampY(r.cy-th/2); tip.style.setProperty('--ay',(r.cy-y)+'px'); }
+  else { x=clampX(r.cx-tw/2); y=clampY(r.top+Math.min(40,r.h/4)); }
+  tip.dataset.place=place; tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function tourGo(d){ let i=tourI+d; while(i>=0&&i<TOUR.length&&TOUR[i].skip&&TOUR[i].skip()) i+=d; if(i<0) return; if(i>=TOUR.length) return tourEnd(); tourI=i; requestAnimationFrame(tourShow); }
+function tourStart(){ closeSheet(); $('#menu').hidden=true; tourI=-1; $('#coach').hidden=false; tourGo(1); setTimeout(()=>$('#coachNext').focus(),50); uiSet('gpu-anatomy-intro','1'); }
+function tourEnd(){ $('#coach').hidden=true; tourI=-1; }
+$('#coachNext').addEventListener('click',()=>tourGo(1));
+$('#coachPrev').addEventListener('click',()=>tourGo(-1));
+$('#coachSkip').addEventListener('click',tourEnd);
+document.addEventListener('keydown',e=>{ if($('#coach').hidden) return; if(e.key==='Escape') tourEnd(); else if(e.key==='ArrowRight'||e.key==='Enter') tourGo(1); else if(e.key==='ArrowLeft') tourGo(-1); else return; e.preventDefault(); e.stopImmediatePropagation(); },true);
+addEventListener('resize',()=>{ if(!$('#coach').hidden) requestAnimationFrame(tourShow); });
+/* 사용법(메뉴)과 첫 방문 모두 둘러보기로 */
+openHelp=function(){ tourStart(); };
+$('#btn-help').textContent='화면 안내 다시 보기';
+
 /* ================= 입력 ================= */
 $('#stepsbar').addEventListener('click',e=>{ const b=e.target.closest('[data-step]'); if(b) goStep(+b.dataset.step); });
 $('#btn-prev').addEventListener('click',()=>goStep(stepBy(-1)));
